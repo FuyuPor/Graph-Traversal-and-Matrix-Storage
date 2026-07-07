@@ -175,23 +175,7 @@ void pageRank(int adj[SIZE][SIZE]) {
 
 }
 
-int COO(int matrix[SIZE][SIZE]){
-    int tuples[] = {};
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            if (matrix[i][j] != 0) {
-                // Store the non-zero element as a tuple (row, column, value)
-                tuples[sizeof(tuples)/sizeof(tuples[0])] = i;
-                tuples[sizeof(tuples)/sizeof(tuples[0])] = j;
-                tuples[sizeof(tuples)/sizeof(tuples[0])] = matrix[i][j];
-            }
-        }
-    }
-}
 
-int CSR(int matrix[SIZE][SIZE]){
-    
-}
 
 int main() {
     Graph g;
@@ -219,6 +203,8 @@ int main() {
     for (int i = 0; i < bfsResSize; i++)
         printf("%c ", g.vertexData[bfsRes[i]]);
     
+    
+    //results for pageRank
     printf("\n");
     printf("\n");
 
