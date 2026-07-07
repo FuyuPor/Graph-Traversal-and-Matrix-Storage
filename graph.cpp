@@ -175,18 +175,22 @@ void pageRank(int adj[SIZE][SIZE]) {
 
 }
 
-int CSR(int matrix[SIZE][SIZE]){
-    int rowptr[] = {};
-    int colind[] = {};
-    int values[] = {};
-    int y[]={};
+int COO(int matrix[SIZE][SIZE]){
+    int tuples[] = {};
     for (int i = 0; i < SIZE; i++) {
-        for (int j = rowptr[i]; j < rowptr[i + 1]; j++) {
-            colind[j] = j;
-            y[i] += values[j]*colind[j];
-            
+        for (int j = 0; j < SIZE; j++) {
+            if (matrix[i][j] != 0) {
+                // Store the non-zero element as a tuple (row, column, value)
+                tuples[sizeof(tuples)/sizeof(tuples[0])] = i;
+                tuples[sizeof(tuples)/sizeof(tuples[0])] = j;
+                tuples[sizeof(tuples)/sizeof(tuples[0])] = matrix[i][j];
+            }
         }
     }
+}
+
+int CSR(int matrix[SIZE][SIZE]){
+    
 }
 
 int main() {
