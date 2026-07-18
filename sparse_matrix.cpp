@@ -1,59 +1,86 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-#define SIZE 3
-#define MAXQ 100
+/* COO (Coordinate) format */
 
-
-/* Coordinate Format Data Structure */
 typedef struct Sparse_Coordinate {
     size_t n_rows;
     size_t n_cols;
-    size_t n_nonzeros;
-    size_t *row_indices;
-    size_t *col_indices;
-    double *values;
+    size_t nnz;
+    size_t* row_indices;
+    size_t* col_indices;
+    double* values;
 
 } Sparse_Coordinate;
 
-int create_sparse_COO(
+
+int create_sparse_coordinate(
     const double* A,
     size_t n_rows,
     size_t n_cols,
-    size_t n_nonzeros,
+    size_t nnz,
+    Sparse_Coordinate* A_coo
+);
+
+int print_sparse_coordinate(const Sparse_Coordinate* A_coo);
+
+int matrix_vector_sparse_coordinate(
+    const Sparse_Coordinate* A_coo,
+    const double* vec,
+    double* res
+);
+
+int free_sparse_coordinate(Sparse_Coordinate* A_coo);
+
+
+int create_sparse_coordinate(
+    const double* A,
+    size_t n_rows,
+    size_t n_cols,
+    size_t nnz,
     Sparse_Coordinate* A_coo
 ) {
+
     A_coo->n_rows = n_rows;
     A_coo->n_cols = n_cols;
-    A_coo->n_nonzeros = n_nonzeros;
-    A_coo->row_indices = (size_t*)calloc(n_nonzeros, sizeof(size_t));
-    A_coo->col_indices = (size_t*)calloc(n_nonzeros, sizeof(size_t));
-    A_coo->values = (double*)calloc(n_nonzeros, sizeof(double));
+    A_coo->nnz = nnz;
+    A_coo->row_indices = (size_t*)calloc(nnz, sizeof(size_t));
+    A_coo->col_indices = (size_t*)calloc(nnz, sizeof(size_t));
+    A_coo->values = (double*)calloc(nnz, sizeof(double));
 
-    size_t nz_index = 0;
-    for (size_t i = 0; i < n_rows; ++i) {
-        for (size_t j = 0; j < n_cols; ++j) {
-            if (A[i * n_cols + j] != 0.0) {
-                A_coo->row_indices[nz_index] = i;
-                A_coo->col_indices[nz_index] = j;
-                A_coo->values[nz_index] = A[i * n_cols + j];
-                ++nz_index;
+    size_t nnz_id = 0;
+
+    for (size_t i = 0; i < n_rows; i++) {
+        for (size_t j = 0; j < n_cols; j++) {
+            if (A[i * n_cols + j] != 0) {
+                A_coo->row_indices[nnz_id] = i;
+                A_coo->col_indices[nnz_id] = j;
+                A_coo->values[nnz_id] = A[i * n_cols + j];
+                nnz_id++;
             }
         }
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
-int print_sparse_coordinate(const Sparse_Coordinate* A_COO){
+
+int print_sparse_coordinate(const Sparse_Coordinate* A_coo) {
     printf("\n");
+    printf("Sparse Matrix in COO format:\n");
+    printf("-------------------\n");
     printf("row\tcol\tval\n");
-    printf("---\n");
-    for (size_t nz_index = 0; nz_index < A_COO->n_nonzeros; ++nz_index) {
-        size_t row = A_COO->row_indices[nz_index];
-        size_t col = A_COO->col_indices[nz_index];
-        double val = A_COO->values[nz_index];
-        printf("%zu\t%zu\t%02.2f\n", row, col, val);
+    printf("-------------------\n");
+    for (size_t nnz_id = 0; nnz_id < A_coo->nnz; nnz_id++) {
+        size_t i = A_coo->row_indices[nnz_id];
+        size_t j = A_coo->col_indices[nnz_id];
+        double val = A_coo->values[nnz_id];
+
+        printf("%zu\t%zu\t%2.2f\n", i, j, val);
     }
-    return 0;
+
+
+    return EXIT_SUCCESS;
 }
 
 int matrix_vector_sparse_coordinate(
@@ -61,118 +88,135 @@ int matrix_vector_sparse_coordinate(
     const double* vec,
     double* res
 ) {
-    // Implementation for matrix-vector multiplication using sparse COO representation
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int free_sparse_coordinate(Sparse_Coordinate* A_coo) {
     free(A_coo->row_indices);
     free(A_coo->col_indices);
     free(A_coo->values);
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
+/* CSR (Compressed Sparse Row) format */
 
-
-int COO(int matrix[SIZE][SIZE]){
-    int tuples[] = {};
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            if (matrix[i][j] != 0) {
-                // Store the non-zero element as a tuple (row, column, value)
-                tuples[sizeof(tuples)/sizeof(tuples[0])] = i;
-                tuples[sizeof(tuples)/sizeof(tuples[0])] = j;
-                tuples[sizeof(tuples)/sizeof(tuples[0])] = matrix[i][j];
-            }
-        }
-    }
-}
-/* Compressed Sparse Row Data Structure */
 typedef struct Sparse_CSR {
     size_t n_rows;
     size_t n_cols;
-    size_t n_nonzeros;
-    size_t *row_ptr;
-    size_t *col_indices;
-    double *values;
+    size_t n_nz;
+    size_t* row_ptr;
+    size_t* col_indices;
+    double* values;
 } Sparse_CSR;
 
-int create_sparse_CSR(
+
+int create_sparse_csr(
     const double* A,
     size_t n_rows,
     size_t n_cols,
-    size_t n_nonzeros,
+    size_t n_nz,
     Sparse_CSR* A_csr
 ) {
     A_csr->n_rows = n_rows;
     A_csr->n_cols = n_cols;
-    A_csr->n_nonzeros = n_nonzeros;
-    A_csr->row_ptr = (size_t*)calloc(n_rows + 1, sizeof(size_t));
-    A_csr->col_indices = (size_t*)calloc(n_nonzeros, sizeof(size_t));
-    A_csr->values = (double*)calloc(n_nonzeros, sizeof(double));
+    A_csr->n_nz = n_nz;
+    A_csr->row_ptr = (size_t*)calloc(n_rows+1, sizeof(size_t));
+    A_csr->col_indices = (size_t*)calloc(n_nz, sizeof(size_t));
+    A_csr->values = (double*)calloc(n_nz, sizeof(double));
 
-    size_t nz_index = 0;
+    size_t nz_id = 0;
 
-    for (size_t i = 0; i < n_rows; ++i) {
-        A_csr->row_ptr[i] = nz_index;
-        for (size_t j = 0; j < n_cols; ++j) {
-            if (A[i * n_cols + j] != 0.0) {
-                A_csr->col_indices[nz_index] = j;
-                A_csr->values[nz_index] = A[i * n_cols + j];
-                ++nz_index;
+    for (size_t i=0; i<n_rows; ++i) {
+        A_csr->row_ptr[i] = nz_id;
+        for (size_t j=0; j<n_cols; ++j) {
+            if (A[i*n_cols + j] != 0.0) {
+                A_csr->col_indices[nz_id] = j;
+                A_csr->values[nz_id] = A[i*n_cols + j];
+                nz_id++;
             }
         }
     }
 
-    A_csr->row_ptr[n_rows] = nz_index; // End of last row
+    A_csr->row_ptr[n_rows] = nz_id;
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-int free_sparse_CSR(Sparse_CSR* A_csr) {
+
+int print_sparse_csr(const Sparse_CSR* A_csr) {
+    printf("\n");
+    printf("Sparse Matrix in CSR format:\n");
+    printf("-------------------\n");
+    printf("row\tcol\tval\n");
+    printf("-------------------\n");
+     for (size_t i=0; i<A_csr->n_rows; ++i) {
+        size_t nz_start = A_csr->row_ptr[i];
+        size_t nz_end = A_csr->row_ptr[i+1];
+        for (size_t nz_id=nz_start; nz_id<nz_end; ++nz_id) {
+            size_t j = A_csr->col_indices[nz_id];
+            double val = A_csr->values[nz_id];
+            printf("%zu\t%zu\t%2.2f\n", i, j, val);
+        }
+    }
+    return EXIT_SUCCESS;
+}
+
+int matrix_vector_sparse_csr(
+    const Sparse_CSR* A_csr,
+    const double* vec,
+    double* res
+);
+
+int free_sparse_csr(Sparse_CSR* A_csr) {
     free(A_csr->row_ptr);
     free(A_csr->col_indices);
     free(A_csr->values);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
-int print_sparse_CSR(const Sparse_CSR* A_CSR){
-    printf("row\tcol\tval\n");
-    printf("---\n");
-    for (size_t i = 0; i < A_CSR->n_rows; ++i) {
-        size_t nz_start = A_CSR->row_ptr[i];
-        size_t nz_end = A_CSR->row_ptr[i + 1];
-        for (size_t nz_index = nz_start; nz_index < nz_end; ++nz_index) {
-            size_t j = A_CSR->col_indices[nz_index];
-            double val = A_CSR->values[nz_index];
-            printf("%zu\t%zu\t%02.2f\n", i, j, val);
-        }
-    }
-}
-int main() {
-    double A[] {
-        2, 0, 0, 2, 0,
-        3, 4, 2, 5, 8, 
-        5, 0, 0, 8, 17, 
-        0, 0, 10, 16, 0,
-        0, 0, 0, 0, 14
+
+/* Main function */
+
+int main (int argc, char** argv) {
+    size_t n_rows = 5;
+    size_t n_cols = 5;
+    size_t nnz = 12;
+
+    double A[] = {
+        1,  0,  0,  2,  0,
+        3,  4,  2,  5,  0,
+        5,  0,  0,  8, 17,
+        0,  0, 10, 16,  0,
+        0,  0,  0,   0, 14
     };
+    double x[] = {
+        1,
+        2,
+        3,
+        4,
+        5
+    };
+    double Ax[5];
 
-    //results for COO
-    printf("\n Results for COO:\n");
-    Sparse_Coordinate coo;
-    create_sparse_COO(A, 5, 5, 12, &coo);
-    free_sparse_coordinate(&coo);
-    print_sparse_coordinate(&coo);
+    Sparse_Coordinate A_coo;
 
-    //results for CSR
-    printf("\n Results for CSR:\n");
-    Sparse_CSR csr;
-    create_sparse_CSR(A, 5, 5, 12, &csr);
-    free_sparse_CSR(&csr);
-    print_sparse_CSR(&csr);
+    create_sparse_coordinate(A, n_rows, n_cols, nnz, &A_coo);
 
-    return 0;
+    print_sparse_coordinate(&A_coo);
+
+    free_sparse_coordinate(&A_coo);
+
+    
+
+    Sparse_CSR A_csr;
+
+    create_sparse_csr(A, n_rows, n_cols, nnz, &A_csr);
+
+    print_sparse_csr(&A_csr);
+
+    free_sparse_csr(&A_csr);
+
+
+    return EXIT_SUCCESS;
 }
-
-//C
